@@ -1,0 +1,47 @@
+name: Build SeedVision AI APK
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout your code
+        uses: actions/checkout@v4
+
+      - name: Setup Buildozer
+        uses: kivy/buildozer-action@v1
+        with:
+          buildozer_version: stable
+
+      - name: Create build config
+        run: |
+          cat > buildozer.spec << EOF
+[app]
+title = SeedVision AI
+package.name = seedvision
+package.domain = com.yvonnehubops
+source.dir = .
+source.include_exts = py,html,css,js,png,jpg,webp,txt
+requirements = python3,flask,opencv-python,pillow,numpy,werkzeug
+orientation = portrait
+android.permissions = INTERNET,ACCESS_NETWORK_STATE,READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE
+android.api = 34
+android.ndk = 27
+android.accept_sdk_license = True
+
+[buildozer]
+log_level = 2
+warn_on_root = 1
+EOF
+
+      - name: Build APK
+        run: buildozer android release
+
+      - name: Save APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: SeedVision-AI-APK
+          path: bin/*.apk
